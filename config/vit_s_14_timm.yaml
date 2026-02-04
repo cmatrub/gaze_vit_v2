@@ -1,0 +1,33 @@
+img_size: [84, 84]
+patch_size: [14, 14]
+in_chans: 1
+num_classes: 4
+global_pool: token
+embed_dim: 384
+depth: 12
+num_heads: 6
+mlp_ratio: 4.0
+qkv_bias: true
+qk_norm: false
+scale_attn_norm: true
+scale_mlp_norm: true
+proj_bias: true
+init_values: null
+class_token: true
+pos_embed: learn
+no_embed_class: false
+reg_tokens: 0
+pre_norm: false
+final_norm: true
+fc_norm: null
+pool_include_prefix: false
+dynamic_img_size: false
+dynamic_img_pad: false
+drop_rate: 0.0
+pos_drop_rate: 0.0
+patch_drop_rate: 0.0
+proj_drop_rate: 0.0
+attn_drop_rate: 0.0
+drop_path_rate: 0.0
+weight_init: ''
+fix_init: false
