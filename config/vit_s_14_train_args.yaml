@@ -1,20 +1,25 @@
+seed: 42
+patch_size: 14
+lr: 0.01
+
 trainer:
   _target_: trainer.Trainer
+  _partial_: True
 
   loss:
-    _target_: losses.CEGazePostAvg_DS
+    _target_: losses.ce_gaze_postavg_ds.CEGazePostAvg_DS
     reg_lambda: 1.0
 
   model:
     _target_: vit_pytorch.ViT
     image_size: 84
-    patch_size: 14
+    patch_size: ${patch_size}
     num_classes: 4
     dim: 384
     depth: 12
     heads: 6
     mlp_dim: 1536
-    pool: 'cls'
+    pool: cls
     channels: 1
     dim_head: 64
     dropout: 0.0
@@ -23,10 +28,46 @@ trainer:
   optimizer:
     _target_: torch.optim.AdamW
     _partial_: true
-    lr: 0.01
+    lr: ${lr}
+    weight_decay: 0.01
 
   attention_extractor:
     _target_: utils.hook.AttentionExtractor
 
   training:
+    num_epochs: 5
+
+
+
+data_pipeline:
+  dataloader: 
+    batch_size: 64
+    num_workers: 4
+    pin_memory: True
+
+  train_test_split: 
+    test_size: 0.2
+    random_state: 42
+    
   
+  preprocess_gaze:
+    _target_: utils.patch_gaze_masks.patch_gaze_masks
+    _partial_: true
+    patch_size: [${patch_size}, ${patch_size}]
+
+
+  load_dataset:
+    _target_: utils.load_dataset
+    env: Seaquest
+    seed: ${seed}
+    datapath: 'dataset/'
+    conf_type: normal
+    train_type: normal
+    conf_randomness: 0.0
+    stack: 1
+    num_episodes: 20
+    use_gaze: True
+    gaze_method: Reg
+    data_source: Our
+    gaze_mask_sigma: 15.0
+    gaze_mask_coef: 0.7
