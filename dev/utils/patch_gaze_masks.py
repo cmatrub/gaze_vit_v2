@@ -1,11 +1,13 @@
 from einops import reduce, rearrange
 import torch.nn.functional as F
+import numpy as np
 
 
 def patch_gaze_masks(gaze_masks, patch_size=(14,14), **kwargs):
     '''
-    returns a (b x f x n) tensor of "attention" values mean-pooled and softmax-ed 
-    input: b x f x h x w
+    use this for downsampling.
+    returns a (b n) tensor of "attention" values mean-pooled and softmax-ed 
+    input shape: (b f h w)
     h = h_out * patch_height
     w = w_out * patch_width
     n = h_out*w_out
@@ -25,6 +27,15 @@ def patch_gaze_masks(gaze_masks, patch_size=(14,14), **kwargs):
     
     return gaze_masks
 
-# if not applying downsampling patching scheme use this
+
+def normalize_gaze_masks(gaze_masks, **kwargs):
+    ''' use this for upsampling'''
+    gaze_masks = rearrange(gaze_masks, 'b 1 h w -> b h w') # squeezing out the frames dim which is 1 (for now)
+
+    flattened = rearrange(gaze_masks, 'b h w -> b (h w)')
+
+    return gaze_masks/np.sum(flattened, axis=-1)
+
+
 def do_nothing(gaze_masks, **kwargs):
     return gaze_masks

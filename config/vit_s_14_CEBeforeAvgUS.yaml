@@ -7,7 +7,7 @@ trainer:
   _partial_: True
 
   loss:
-    _target_: losses.ce_gaze_postavg_ds.CEGazePostAvg_DS
+    _target_: losses.ce_before_avg_us.CEBeforeAvgUS
     reg_lambda: 1.0
 
   model:
@@ -47,11 +47,11 @@ data_pipeline:
 
   train_test_split: 
     test_size: 0.2
-    random_state: 42
+    random_state: ${seed}
     
   
   preprocess_gaze:
-    _target_: utils.patch_gaze_masks.patch_gaze_masks
+    _target_: utils.patch_gaze_masks.normalize_gaze_masks
     _partial_: true
     patch_size: [${patch_size}, ${patch_size}]
 

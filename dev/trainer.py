@@ -40,7 +40,7 @@ class Trainer:
 
         # extract out attention weights
         gaze_preds = self.attn_extractor.cls_qkt_logits
-
+        
         # calculate loss w regularization
         loss = self.loss_fn(action_preds, action_targs, gaze_preds, gaze_targs)
         

@@ -2,6 +2,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from GABRIL_utils.utils import load_dataset
 from hydra.utils import instantiate
 from sklearn.model_selection import train_test_split
+from einops import rearrange
 
 class DataPipeline:
     # having this as a class allows me to train multiple models for one dataset load if i later find dataset loading to be a major time drain
@@ -20,6 +21,9 @@ class DataPipeline:
 
         self.train_loader = DataLoader(train_dataset, **self.cfg.dataloader, shuffle=True)
         self.val_loader = DataLoader(val_dataset, **self.cfg.dataloader, shuffle=False)
+        
+
+        
         
 
         

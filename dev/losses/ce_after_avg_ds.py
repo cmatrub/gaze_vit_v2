@@ -1,13 +1,26 @@
 import torch.nn.functional as F
 from einops import rearrange, reduce
 
-class CEGazePostAvg_DS: 
-    '''u mean pool the attn logits across the heads, then u calculate cross entropy. this is for the downsampling scheme'''
+class CEAfterAvgDS: 
+    '''u mean pool the attn logits across the heads, then u calculate cross entropy. this is for the downsampling scheme
+    
+        :param gaze_preds: attn logits (not softmaxed), shape: (b h l, l)
+        :param gaze_targs: shape: (b, p)
+
+        where p = number of patches, l = sqrt(p)
+
+        output: both should be shape: (b, p)
+        '''
+    
     def __init__(self, reg_lambda=1.0):
         self.reg_lambda = reg_lambda
 
 
     def _preprocess_gaze_preds_and_targs(self, gaze_preds, gaze_targs):
+        # gaze_preds needs to be softmaxed, hook only returns logits
+        gaze_preds = rearrange(gaze_preds, 'b h l l -> b h (l l)') # (b, h, p)
+        gaze_preds = F.softmax(gaze_preds, dim=-1) 
+
         # mean pool across the num_heads dimension
         gaze_preds = reduce(gaze_preds, 'b h p -> b p', reduction='mean')
 
