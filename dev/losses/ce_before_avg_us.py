@@ -13,32 +13,30 @@ class CEBeforeAvgUS:
 
     def _preprocess_gaze_preds_and_targs(self, gaze_preds, gaze_targs):
         '''
-        :param gaze_preds: non-softmaxed attn logits, shape: (b h l, l) 
-        :param gaze_targs: shape: (b, N)
-        where b = batch_size, h = number of heads, p = number of patches, l = sqrt(p), N = (og input image size)^2
+        :param gaze_preds: non-softmaxed attn logits, shape: (b h p) 
+        :param gaze_targs: shape: (b, H, W)
+        where b = batch_size, h = number of heads, p = number of patches, H, W = og input image height and width 
 
-        output both in shape: ((b h) N)
+        output both in shape: ((b h) (H W))
         '''
-        h = gaze_preds.shape[1] 
-        l = gaze_preds.shape[2]
-        N = gaze_targs.shape[1] # N = 84^2
-        patch_size_squared = (sqrt(N)/l)^2
+        _, h, p = gaze_preds.shape
+        _, H, W = gaze_targs.shape # H = W = 84
+        patch_size_squared = int(H*W/p)
         
 
         # broadcast across heads
-        gaze_targs = repeat(gaze_targs, 'b N -> b h N', h=h) 
+        gaze_targs = repeat(gaze_targs, 'b H W -> b h H W', h=h) 
 
         # gaze_preds needs to be softmaxed, hook only returns logits
-        gaze_preds = rearrange(gaze_preds, 'b h l l -> b h (l l)') # (b, h, p)
         gaze_preds = F.softmax(gaze_preds, dim=-1) 
 
         # upsample
-        gaze_preds = repeat(gaze_preds, 'b h p -> b h (p patch_square)', patch_square=patch_size_squared) # p * patch_size_squared = N
+        gaze_preds = repeat(gaze_preds, 'b h p -> b h (p patch_square)', patch_square=patch_size_squared) # p * patch_size_squared = H*W (alias as "N")
 
 
         #  collapse the batch_size and num_heads dim into one that cross_entropy will average over to return u a scalar (this averages across the batch and heads so u dont need to do 2 separate averages)
-        gaze_preds = rearrange(gaze_preds, 'b h N -> (b h) N')
-        gaze_targs = rearrange(gaze_targs, 'b h N -> (b h) N')
+        gaze_preds = rearrange(gaze_preds, 'b h N -> (b h) N') 
+        gaze_targs = rearrange(gaze_targs, 'b h H W -> (b h) (H W)')
 
         return gaze_preds, gaze_targs
 

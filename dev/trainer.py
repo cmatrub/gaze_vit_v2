@@ -9,21 +9,25 @@ from omegaconf import DictConfig
 from vit_pytorch import ViT
 from utils.hook import AttentionExtractor
 import numpy as np
+from utils.logger import Logger
+from utils.hook import AttentionExtractor
 
 class Trainer:
     def __init__(self, config, train_loader, val_loader):
-        self.cfg = config.trainer
+        self.cfg = config
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') # not in yaml bc its not gna change
 
         self._construct_components(train_loader, val_loader)
         
 
     def _construct_components(self, train_loader, val_loader):
-        self.loss_fn = instantiate(self.cfg.loss)
-        self.model = instantiate(self.cfg.model).to(self.device)
-        self.attn_extractor = instantiate(self.cfg.attention_extractor)
+        self.loss_fn = instantiate(self.cfg.trainer.loss)
+        self.model = instantiate(self.cfg.trainer.model).to(self.device)
+        self.attn_extractor = AttentionExtractor()
         self.handle = self.model.transformer.layers[-1][0].attend.register_forward_hook(self.attn_extractor.hook_fn) # type: ignore
-        self.optimizer = instantiate(self.cfg.optimizer, params=self.model.parameters())
+        self.optimizer = instantiate(self.cfg.trainer.optimizer)(params=self.model.parameters())
+        self.logger = Logger(self.cfg)
+        
         self.train_loader = train_loader
         self.val_loader = val_loader
 
@@ -50,15 +54,16 @@ class Trainer:
         # update model weights in opposite direction of gradient
         self.optimizer.step()
         
-        return loss.item() # so train() can log it
+        return {'train_loss' : loss.item()} # so train() can log it
 
 
     def train(self):
         for epoch in range(self.cfg.training.num_epochs):
-            losses = []
+            loss_dict = {}
             
             for batch in self.train_loader:
                 loss_dict = self._train_step(batch)
-                losses.append(loss_dict['total_loss'])
+
+            self.logger.log_scalar_dict(loss_dict, step=epoch) # log last timestep in the epoch
             
-            print(f"Epoch {epoch}: {np.mean(losses):.4f}")
+            print(f"Epoch {epoch} done!")

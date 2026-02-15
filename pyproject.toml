@@ -14,14 +14,13 @@ dependencies = [
     "numpy>=2.4.1",
     "opencv-python>=4.11.0.86",
     "pygame>=2.6.1",
+    "scikit-learn>=1.8.0",
     "scipy>=1.17.0",
     "stable-baselines3>=2.3.2",
     "tensorboard>=2.20.0",
     "torch>=2.9.1",
     "torchvision>=0.24.1",
     "tqdm>=4.67.1",
-    "vit-pytorch",
+    "vit-pytorch>=1.17.8",
+    "wandb>=0.25.0",
 ]
-
-[tool.uv.sources]
-vit-pytorch = { git = "ssh://git@github.com/lucidrains/vit-pytorch.git" }

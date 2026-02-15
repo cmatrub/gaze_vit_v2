@@ -1,6 +1,5 @@
 from einops import reduce, rearrange
 import torch.nn.functional as F
-import numpy as np
 
 
 def patch_gaze_masks(gaze_masks, patch_size=(14,14), **kwargs):
@@ -33,8 +32,9 @@ def normalize_gaze_masks(gaze_masks, **kwargs):
     gaze_masks = rearrange(gaze_masks, 'b 1 h w -> b h w') # squeezing out the frames dim which is 1 (for now)
 
     flattened = rearrange(gaze_masks, 'b h w -> b (h w)')
-
-    return gaze_masks/np.sum(flattened, axis=-1)
+    sums = flattened.sum(dim=-1)
+    sums = rearrange(sums, 'b -> b 1 1')
+    return gaze_masks/sums
 
 
 def do_nothing(gaze_masks, **kwargs):
