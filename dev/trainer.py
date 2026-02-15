@@ -64,6 +64,8 @@ class Trainer:
             for batch in self.train_loader:
                 loss_dict = self._train_step(batch)
 
+            # TODO: run validation and add val_loss to loss_dict
+
             self.logger.log_scalar_dict(loss_dict, step=epoch) # log last timestep in the epoch
             
             print(f"Epoch {epoch} done!")
