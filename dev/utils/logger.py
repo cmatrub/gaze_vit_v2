@@ -14,10 +14,11 @@ class Logger:
 
         self.run = wandb.init(
             project='gaze-vit-v2',
-            config=OmegaConf.to_container(cfg, resolve=True),  # Convert to dict # type: ignore
+            entity='nityakas-usc', # team name
+            config=OmegaConf.to_container(cfg, resolve=True),  # Convert to dict # type: ignore,
             name=run_name,
             group=run_group,
-            tags=['dev'] 
+            tags=['dev'],
         )
     
     def log_scalar_dict(self, scalar_dict:dict, step:int) -> None:
