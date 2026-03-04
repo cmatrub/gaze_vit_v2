@@ -1,0 +1,6 @@
+# @package _global_
+trainer:
+  loss:
+    reg_loss_fn:
+      _target_: torch.nn.functional.binary_cross_entropy_with_logits
+      _partial_: true # returns a callable object, doesnt call it

@@ -1,0 +1,6 @@
+# @package _global_
+trainer:
+  loss:
+    reg_loss_fn:
+      _target_: torch.nn.functional.cross_entropy
+      _partial_: true # returns a callable object, doesnt call it

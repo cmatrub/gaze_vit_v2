@@ -1,0 +1,16 @@
+# @package _global_
+trainer:
+  model:
+    _target_: vit_pytorch.ViT
+    image_size: 84
+    patch_size: ${patch_size}
+    num_classes: 18
+    dim: 384
+    depth: 12
+    heads: 6
+    mlp_dim: 1536
+    pool: cls
+    channels: 1
+    dim_head: 64
+    dropout: 0.0
+    emb_dropout: 0.0
