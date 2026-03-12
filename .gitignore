@@ -5,3 +5,4 @@ patched_dataset/
 __MACOSX/
 wandb/
 .vscode/
+*.sbatch
