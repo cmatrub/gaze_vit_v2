@@ -1,0 +1,17 @@
+# k8s manifest
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: gaze-vit-2-
+spec:
+  ttlSecondsAfterFinished: 86400 # auto-garbage-collect after 24 h
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: gaze-vit-2
+          image: gaze-vit-2-img
+          imagePullPolicy: Always
+          resources:
+            limits:
+              nvidia.com/gpu: 1
