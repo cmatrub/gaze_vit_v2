@@ -1,0 +1,7 @@
+dataset/
+wandb/
+outputs/
+.git/
+**/__pycache__/
+**/*.pyc
+.venv/
