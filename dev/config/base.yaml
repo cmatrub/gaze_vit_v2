@@ -48,7 +48,7 @@ data_pipeline:
     conf_type: normal
     conf_randomness: 0.0
     stack: 1
-    num_episodes: 20
+    num_episodes: 2
     use_gaze: False
     data_source: Our
     gaze_mask_sigma: 15.0
