@@ -1,7 +1,7 @@
 defaults:
   - _self_ # controls the merge order so MUST come first (base.yaml's keys take priority, so its use_gaze: False default will be overridden by the loss config's use_gaze: True)
   - model: vit_s_14
-  - loss: ce
+  - loss: no_reg
   - optional reg_loss_fn: null
 
 seed: 42
@@ -22,8 +22,13 @@ trainer:
     eta_min: 1.0e-6
 
   training:
-    num_epochs: 10
+    num_epochs: 1
     patience: 10
+
+  eval_in_env:
+    record_eps: 2
+    frame_skip: 4
+    wandb_playback_fps: 15
 
 data_pipeline:
   dataloader:

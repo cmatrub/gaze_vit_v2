@@ -2,7 +2,7 @@ import torch
 from utils.hook import AttentionExtractor
 import utils.patch_gaze_masks
 import torch.nn.functional as F
-import losses
+import reg
 import hydra
 from hydra.core.hydra_config import HydraConfig
 from hydra.utils import instantiate
@@ -16,6 +16,9 @@ import gymnasium as gym
 import ale_py
 from GABRIL_utils import atari_env_manager
 import os
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 class Trainer:
@@ -44,10 +47,11 @@ class Trainer:
 
     def wandb_logging_init(self):
         env = self.cfg.data_pipeline.load_dataset.env # type: ignore
-        loss_type = HydraConfig.get().runtime.choices.get('loss', 'unknown') # unknown is just a fallback value for the .get() dict lookup. If for some reason "loss" isn't found in Hydra's runtime choices (e.g., someone runs the script without specifying a loss group)
-
+        reg_type = HydraConfig.get().runtime.choices.get('loss', 'unknown') # unknown is just a fallback value for the .get() dict lookup. If for some reason "loss" isn't found in Hydra's runtime choices (e.g., someone runs the script without specifying a loss group)
+        reg_loss_fn = HydraConfig.get().runtime.choices.get('reg_loss_fn', 'unknown')
+        
         run_group = env 
-        run_name = f'{env}_{loss_type}'
+        run_name = f'{env}_{reg_loss_fn}_{reg_type}'
 
         self.run = wandb.init(
             project='gaze-vit-v2',
@@ -134,7 +138,7 @@ class Trainer:
 
     @torch.no_grad()
     def eval_validation_set(self, epoch):
-        """evaluating current model on training and validation sets. spits out avg loss for both in a dictionary w 2 keys"""
+        """evaluating current model on training and validation sets. returns avg loss for validation set"""
 
         val_iters = len(self.val_loader)
         splits = {'train': self.train_loader, 'val': self.val_loader}
@@ -174,15 +178,19 @@ class Trainer:
 
             wandb.log({f'{split}_avg_loss': avg_loss}, step=epoch) # wandb auto-increments its internal step counter each time you call wandb.log(), so the metrics might end up on different x-axis steps. pass an explicit step=epoch to keep them aligned.
 
-            # log action preds and targs for wandb confusion matrix (for both training and validation set data)
+            # create and log confusion matrix
             action_preds = torch.cat(all_action_preds)  # still on GPU
             action_targs = torch.cat(all_action_targs)
 
-            wandb.log({f'{split}_conf_mat': wandb.plot.confusion_matrix(
-                y_true=action_targs.cpu().numpy().tolist(),
-                preds=action_preds.cpu().numpy().tolist(),
-                class_names=class_names
-            )}, step=epoch)
+            cm = confusion_matrix(action_targs.cpu().numpy(), action_preds.cpu().numpy())
+            fig, ax = plt.subplots(figsize=(8, 6))
+            sns.heatmap(cm, annot=True, fmt='d', ax=ax,
+                        xticklabels=class_names, yticklabels=class_names)
+            ax.set_xlabel('Predicted')
+            ax.set_ylabel('Actual')
+            ax.set_title(f'Epoch {epoch}')
+            wandb.log({f'{split}/confusion_matrix': wandb.Image(fig)}, step=epoch)
+            plt.close(fig)
 
 
         self.model.train()  # reset to training mode
@@ -192,8 +200,12 @@ class Trainer:
 
     @torch.no_grad()
     def eval_in_env(self):
+
         self.model.eval()
         num_episodes = self.cfg.data_pipeline.load_dataset.num_episodes
+        record_eps = self.cfg.trainer.eval_in_env.record_eps
+        frame_skip = self.cfg.trainer.eval_in_env.frame_skip
+        wandb_playback_fps = self.cfg.trainer.eval_in_env.wandb_playback_fps
 
         scores = []
         for episode in range(num_episodes):
@@ -208,7 +220,7 @@ class Trainer:
 
                 stacked_obs = np.asarray(stacked_obs, dtype=np.uint8)
 
-                _ = self.env.get_wrapper_attr('render_')(gaze=None, record_frame=episode < 2)
+                _ = self.env.get_wrapper_attr('render_')(gaze=None, record_frame=(episode < record_eps and step % frame_skip == 0))
 
                 stacked_obs = torch.as_tensor(stacked_obs, device=self.device, dtype=torch.float32).unsqueeze(0) / 255.0
                 action = self.model(stacked_obs).argmax(1)[0].cpu().item()
@@ -226,6 +238,12 @@ class Trainer:
             scores.append(episode_reward)
             print(f"Episode {episode} reward: {episode_reward} (mean: {np.mean(scores):.1f}, std: {np.std(scores):.1f}), steps: {step}")
 
+            if episode < record_eps:
+                video_path = f'vids/{self.cfg.env_name}_eval_ep{episode}.mp4'
+                self.env.get_wrapper_attr('save_video')(video_path)
+                self.env.get_wrapper_attr('img_list').clear()
+                wandb.log({f'eval/video_ep{episode}': wandb.Video(video_path, fps=wandb_playback_fps, format='mp4')})
+
         mean_score, std_score = np.mean(scores), np.std(scores)
 
         wandb.log({
@@ -234,10 +252,6 @@ class Trainer:
             'eval/min_score': np.min(scores),
             'eval/max_score': np.max(scores),
         })
-
-        video_path = f'vids/{self.cfg.env_name}_eval.mp4'
-        self.env.get_wrapper_attr('save_video')(video_path)
-        wandb.log({'eval/video': wandb.Video(video_path, fps=15, format='mp4')})
 
         self.model.train()
         self.env.close()

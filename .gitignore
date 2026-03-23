@@ -1,9 +1,18 @@
+# hidden 
+.vscode/
 .venv/
+
+# file extensions
+*.sbatch
+*.mp4
+*.pt
+
+# directories
 __pycache__/
-dataset
+dataset/
 patched_dataset/
 __MACOSX/
 wandb/
-.vscode/
-*.sbatch
 outputs/
+
+
