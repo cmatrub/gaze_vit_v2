@@ -21,4 +21,8 @@ COPY . .
 RUN uv sync --frozen
 
 ENV PYTHONUNBUFFERED=1
+<<<<<<< HEAD
 CMD ["uv", "run", "python3", "dev/main.py", "-m", "loss=ce,ce_before_avg_us", "reg_loss_fn=ce,bce"]
+=======
+CMD ["uv", "run", "python3", "dev/main.py", "-m", "loss=ce,ce_before_avg_us", "reg_loss_fn=ce,bce"]
+>>>>>>> 78bcdd7 (Dockerfile)
