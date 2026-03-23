@@ -22,7 +22,7 @@ trainer:
     eta_min: 1.0e-6
 
   training:
-    num_epochs: 1
+    num_epochs: 2
     patience: 100
 
   eval_in_env:
