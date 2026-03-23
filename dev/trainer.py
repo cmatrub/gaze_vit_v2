@@ -183,19 +183,23 @@ class Trainer:
             action_targs = torch.cat(all_action_targs)
 
             cm = confusion_matrix(action_targs.cpu().numpy(), action_preds.cpu().numpy())
-            fig, ax = plt.subplots(figsize=(5, 5))
+            n_classes = len(class_names)
+            cell_size = 0.6
+            fig_size = max(cell_size * n_classes, 6)
+            fig, ax = plt.subplots(figsize=(fig_size + 1, fig_size))
             im = ax.imshow(cm, interpolation="nearest", cmap="Blues")
-            fig.colorbar(im)
-            ticks = np.arange(len(class_names))
+            fig.colorbar(im, fraction=0.046, pad=0.04)
+            ticks = np.arange(n_classes)
             ax.set(
                 xticks=ticks, yticks=ticks,
                 xticklabels=class_names, yticklabels=class_names,
                 xlabel="Predicted", ylabel="True",
                 title=f"{split} set confusion matrix (epoch {epoch})",
             )
+            ax.tick_params(axis='x', labelrotation=90)
             for i in range(cm.shape[0]):
                 for j in range(cm.shape[1]):
-                    ax.text(j, i, str(cm[i, j]), ha="center", va="center", color="black")
+                    ax.text(j, i, str(cm[i, j]), ha="center", va="center", color="black", fontsize=7)
             fig.tight_layout()
             wandb.log({f'{split}/confusion_matrix': wandb.Image(fig)}, step=epoch)
             plt.close(fig)
