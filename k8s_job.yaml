@@ -10,8 +10,11 @@ spec:
       restartPolicy: Never
       containers:
         - name: gaze-vit-2
-          image: gaze-vit-2-img
+          image: cmatrubhutam/gaze-vit-2-img:v1
           imagePullPolicy: Always
           resources:
+            requests:
+              memory: "32Gi"
+              nvidia.com/gpu: 1
             limits:
               nvidia.com/gpu: 1

@@ -9,13 +9,16 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
  mv ~/.local/bin/uv /usr/local/bin/uv
 
 WORKDIR /workspace
-COPY pyproject.toml .
+# COPY pyproject.toml .
+COPY pyproject.toml uv.lock ./
 
 ENV UV_LINK_MODE=copy
-RUN --mount=type=cache,target=/root/.cache/uv uv pip install --system -r pyproject.toml
+# RUN --mount=type=cache,target=/root/.cache/uv uv pip install --system -r pyproject.toml
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-install-project
 
 COPY . .
-RUN uv pip install --system --no-deps .
+# RUN uv pip install --system --no-deps .
+RUN uv sync --frozen
 
 ENV PYTHONUNBUFFERED=1
-CMD ["python3", "examples/2048/2048.py"]
+CMD ["uv", "run", "python3", "dev/main.py", "-m", "loss=ce,ce_before_avg_us", "reg_loss_fn=ce,bce"]
