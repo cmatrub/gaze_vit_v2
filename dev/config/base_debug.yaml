@@ -12,7 +12,7 @@ trainer:
   optimizer:
     _target_: torch.optim.AdamW
     _partial_: true
-    lr: 3e-4
+    lr: 0.01
     weight_decay: 0.01
 
   scheduler:
@@ -22,11 +22,11 @@ trainer:
     eta_min: 1.0e-6
 
   training:
-    num_epochs: 100
-    patience: 30
+    num_epochs: 2
+    patience: 100
 
   eval_in_env:
-    num_episodes: 10
+    num_episodes: 2
     record_eps: 2
     frame_skip: 3
     wandb_playback_fps: 15
@@ -48,7 +48,7 @@ data_pipeline:
     conf_type: normal
     conf_randomness: 0.0
     stack: 1
-    num_episodes: 50
+    num_episodes: 2
     use_gaze: False
     data_source: Our
     gaze_mask_sigma: 15.0
