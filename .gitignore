@@ -14,3 +14,4 @@ patched_dataset/
 __MACOSX/
 wandb/
 outputs/
+.DS_Store

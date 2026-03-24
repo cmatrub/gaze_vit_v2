@@ -3,7 +3,8 @@ FROM nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive \
  apt-get install -y --no-install-recommends \
  python3 python3-dev python3-venv python3-distutils \
- build-essential git curl ca-certificates cmake
+ build-essential git curl ca-certificates cmake \
+ libgl1 libglib2.0-0
 
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
  mv ~/.local/bin/uv /usr/local/bin/uv
@@ -21,8 +22,4 @@ COPY . .
 RUN uv sync --frozen
 
 ENV PYTHONUNBUFFERED=1
-<<<<<<< HEAD
 CMD ["uv", "run", "python3", "dev/main.py", "-m", "loss=ce,ce_before_avg_us", "reg_loss_fn=ce,bce"]
-=======
-CMD ["uv", "run", "python3", "dev/main.py", "-m", "loss=ce,ce_before_avg_us", "reg_loss_fn=ce,bce"]
->>>>>>> 78bcdd7 (Dockerfile)

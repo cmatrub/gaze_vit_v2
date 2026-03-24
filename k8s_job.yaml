@@ -10,7 +10,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: gaze-vit-2
-          image: cmatrubhutam/gaze-vit-2-img:v1
+          image: cmatrubhutam/gaze-vit-2-img:v2
           imagePullPolicy: Always
           resources:
             requests:
@@ -18,3 +18,18 @@ spec:
               nvidia.com/gpu: 1
             limits:
               nvidia.com/gpu: 1
+          volumeMounts:
+            - name: dataset
+              mountPath: /workspace/dataset
+          env:
+            - name: WANDB_TAGS
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['job-name']
+          envFrom:
+            - secretRef:
+                name: wandb-secret
+      volumes:
+        - name: dataset
+          persistentVolumeClaim:
+            claimName: gaze-dataset-pvc
